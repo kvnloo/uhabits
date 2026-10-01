@@ -25,11 +25,20 @@ import org.isoron.uhabits.core.commands.Command
 import org.isoron.uhabits.core.commands.CommandRunner
 import org.isoron.uhabits.core.commands.CreateRepetitionCommand
 import org.isoron.uhabits.core.commands.DeleteHabitsCommand
+import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.NumericalHabitType
 import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.tasks.Task
 import org.isoron.uhabits.core.tasks.TaskRunner
+
+internal fun isReminderSatisfied(habit: Habit, date: LocalDate): Boolean {
+    if (habit.isNumerical && habit.targetType == NumericalHabitType.AT_MOST) {
+        val value = habit.computedEntries.get(date).value
+        return value != Entry.UNKNOWN && value / 1000.0 <= habit.targetValue
+    }
+    return habit.isCompletedToday()
+}
 
 @AppScope
 @Inject
@@ -114,12 +123,12 @@ open class NotificationTray(
         private val reminderTime: Long = data.reminderTime
 
         override suspend fun doInBackground() {
-            isCompleted = habit.isCompletedToday()
+            isCompleted = isReminderSatisfied(habit, date)
         }
 
         override fun onPostExecute() {
             systemTray.log("Showing notification for habit=" + habit.id)
-            if (isCompleted && habit.targetType != NumericalHabitType.AT_MOST) {
+            if (isCompleted) {
                 systemTray.log("Habit ${habit.id} already checked. Skipping.")
                 return
             }
