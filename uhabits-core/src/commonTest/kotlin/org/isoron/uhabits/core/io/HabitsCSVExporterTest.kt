@@ -20,6 +20,7 @@ package org.isoron.uhabits.core.io
 
 import kotlinx.coroutines.test.runTest
 import org.isoron.platform.io.ZipReader
+import org.isoron.platform.io.csvLine
 import org.isoron.uhabits.core.BaseUnitTest
 import org.isoron.uhabits.core.models.Habit
 import kotlin.test.BeforeTest
@@ -35,6 +36,26 @@ class HabitsCSVExporterTest : BaseUnitTest() {
         super.setUp()
         habitList.add(fixtures.createShortHabit())
         habitList.add(fixtures.createEmptyHabit())
+    }
+
+    @Test
+    fun testCombinedCsvEscapesHabitNames() = runTest {
+        val selected: MutableList<Habit> = mutableListOf()
+        for (h in habitList) selected.add(h)
+        selected[0].name = "Blood pressure, evening"
+        selected[1].name = "Sleep \"quality\""
+
+        val bytes = HabitsCSVExporter(habitList, selected).writeArchive()
+        val entries = ZipReader(bytes).entries()
+        val expectedHeader = csvLine(
+            arrayOf("Date", "Blood pressure, evening", "Sleep \"quality\"", "")
+        ).trimEnd()
+
+        for (file in arrayOf("Checkmarks.csv", "Scores.csv")) {
+            val entry = entries.find { it.name == file }
+            assertNotNull(entry, "$file should exist in zip")
+            assertEquals(expectedHeader, entry.content.lineSequence().first())
+        }
     }
 
     @Test
