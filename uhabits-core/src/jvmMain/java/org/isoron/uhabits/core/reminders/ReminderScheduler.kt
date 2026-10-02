@@ -115,7 +115,11 @@ open class ReminderScheduler(
     @Synchronized
     open fun snoozeReminder(habit: Habit, minutes: Long) {
         val now = DateUtils.applyTimezone(DateUtils.getLocalTime())
-        val snoozedUntil = now + minutes * 60 * 1000
+        snoozeUntil(habit, now + minutes * 60 * 1000)
+    }
+
+    @Synchronized
+    open fun snoozeUntil(habit: Habit, snoozedUntil: Long) {
         widgetPreferences.setSnoozeTime(habit.id!!, snoozedUntil)
         schedule(habit)
     }

@@ -141,6 +141,77 @@ open class Preferences(private val storage: Storage) {
             storage.putBoolean("pref_disable_animation", enabled)
         }
 
+    /**
+     * Downstream research-only lease used to test whether delaying nonurgent
+     * reminders protects focus. This is intentionally not a user-facing
+     * preference and should not be promoted upstream without experimental
+     * evidence.
+     *
+     * Timestamp uses the same local-time representation as reminder snoozes.
+     */
+    open var experimentalFocusShieldUntil: Long
+        get() = storage.getLong("experiment_focus_shield_until", 0L)
+        set(value) {
+            storage.putLong("experiment_focus_shield_until", value)
+        }
+
+    open val experimentalFocusShieldReminderCount: Long
+        get() = storage.getLong("experiment_focus_shield_reminder_count", 0L)
+
+    open val experimentalFocusShieldDeferralCount: Long
+        get() = storage.getLong("experiment_focus_shield_deferral_count", 0L)
+
+    /**
+     * Flat records:
+     * [observedEpochMillis, reminderTime, deferredUntil, shieldedFlag, ...].
+     *
+     * observedEpochMillis is a real UTC epoch anchor for joining against
+     * ActivityWatch. reminderTime/deferredUntil retain Loop's internal reminder
+     * clock representation. No habit IDs/names are retained.
+     */
+    open val experimentalFocusShieldEventLog: LongArray
+        get() = storage.getLongArray("experiment_focus_shield_event_log", longArrayOf())
+
+    open fun recordExperimentalFocusShieldReminderEvent(
+        observedEpochMillis: Long,
+        reminderTime: Long,
+        deferredUntil: Long,
+        shielded: Boolean
+    ) {
+        storage.putLong(
+            "experiment_focus_shield_reminder_count",
+            experimentalFocusShieldReminderCount + 1
+        )
+        if (shielded) {
+            storage.putLong(
+                "experiment_focus_shield_deferral_count",
+                experimentalFocusShieldDeferralCount + 1
+            )
+        }
+
+        val updated =
+            experimentalFocusShieldEventLog + longArrayOf(
+                observedEpochMillis,
+                reminderTime,
+                deferredUntil,
+                if (shielded) 1L else 0L
+            )
+        val maxValues = 800 // newest 200 reminder events
+        storage.putLongArray(
+            "experiment_focus_shield_event_log",
+            if (updated.size <= maxValues) updated else updated.copyOfRange(
+                updated.size - maxValues,
+                updated.size
+            )
+        )
+    }
+
+    open fun clearExperimentalFocusShieldMetrics() {
+        storage.putLong("experiment_focus_shield_reminder_count", 0L)
+        storage.putLong("experiment_focus_shield_deferral_count", 0L)
+        storage.putLongArray("experiment_focus_shield_event_log", longArrayOf())
+    }
+
     open fun removeListener(listener: Listener) {
         listeners.remove(listener)
     }

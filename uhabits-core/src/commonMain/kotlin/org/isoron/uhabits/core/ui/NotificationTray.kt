@@ -37,7 +37,8 @@ open class NotificationTray(
     private val taskRunner: TaskRunner,
     private val commandRunner: CommandRunner,
     private val preferences: Preferences,
-    private val systemTray: SystemTray
+    private val systemTray: SystemTray,
+    private val reminderIntervention: ReminderIntervention = NoOpReminderIntervention
 ) : CommandRunner.Listener, Preferences.Listener {
     private val active: MutableMap<Habit, NotificationData> = mutableMapOf()
     open fun cancel(habit: Habit) {
@@ -64,7 +65,7 @@ open class NotificationTray(
     open fun show(habit: Habit, date: LocalDate, reminderTime: Long) {
         val data = NotificationData(date, reminderTime)
         active[habit] = data
-        taskRunner.execute(ShowNotificationTask(habit, data))
+        taskRunner.execute(ShowNotificationTask(habit, data, recordExperiment = true))
     }
 
     open fun startListening() {
@@ -84,13 +85,13 @@ open class NotificationTray(
 
     private fun reshowAll() {
         for ((habit, data) in active.entries) {
-            taskRunner.execute(ShowNotificationTask(habit, data))
+            taskRunner.execute(ShowNotificationTask(habit, data, recordExperiment = false))
         }
     }
 
     open fun reshow(habit: Habit) {
         active[habit]?.let {
-            taskRunner.execute(ShowNotificationTask(habit, it))
+            taskRunner.execute(ShowNotificationTask(habit, it, recordExperiment = false))
         }
     }
 
@@ -107,8 +108,11 @@ open class NotificationTray(
     }
 
     internal class NotificationData(val date: LocalDate, val reminderTime: Long)
-    private inner class ShowNotificationTask(private val habit: Habit, data: NotificationData) :
-        Task {
+    private inner class ShowNotificationTask(
+        private val habit: Habit,
+        data: NotificationData,
+        private val recordExperiment: Boolean
+    ) : Task {
         var isCompleted = false
         private val date: LocalDate = data.date
         private val reminderTime: Long = data.reminderTime
@@ -134,6 +138,25 @@ open class NotificationTray(
             if (!shouldShowReminderToday()) {
                 systemTray.log("Habit ${habit.id} not supposed to run today. Skipping.")
                 return
+            }
+
+            val deferredUntil = reminderIntervention.deferUntil(habit, reminderTime)
+            if (deferredUntil != null) {
+                if (recordExperiment) {
+                    reminderIntervention.onDeferred(reminderTime, deferredUntil)
+                }
+                systemTray.log(
+                    "Habit ${habit.id} deferred by reminder intervention until $deferredUntil"
+                )
+                // A deferred reminder is not currently displayed. Leaving it in
+                // the active tray would let a later preference change call
+                // reshowAll() and bypass the persisted snooze.
+                active.remove(habit)
+                return
+            }
+
+            if (recordExperiment) {
+                reminderIntervention.onShown(reminderTime)
             }
             systemTray.showNotification(
                 habit,
