@@ -37,10 +37,9 @@ class FlowShieldExperimentReceiver : BroadcastReceiver() {
                 Log.i(
                     TAG,
                     "focus_shield=report until=${preferences.experimentalFocusShieldUntil} " +
+                        "reminders=${preferences.experimentalFocusShieldReminderCount} " +
                         "deferrals=${preferences.experimentalFocusShieldDeferralCount} " +
-                        "last_reminder=${preferences.experimentalFocusShieldLastReminderTime} " +
-                        "last_deferred_until=${preferences.experimentalFocusShieldLastDeferredUntil} " +
-                        "pairs=${preferences.experimentalFocusShieldDeferralLog.joinToString(",")}"
+                        "records=${preferences.experimentalFocusShieldEventLog.joinToString(",")}"
                 )
             }
 
