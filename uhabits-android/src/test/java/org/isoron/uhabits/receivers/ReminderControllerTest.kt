@@ -81,7 +81,7 @@ class ReminderControllerTest : BaseAndroidJVMTest() {
                 deferredUntil = shieldUntil
             )
         }
-        verify { reminderScheduler.scheduleAtTime(habit, shieldUntil) }
+        verify { reminderScheduler.snoozeUntil(habit, shieldUntil) }
         verify { notificationTray.cancel(habit) }
         verifyNoMoreCalls(reminderScheduler)
         verifyNoMoreCalls(notificationTray)
