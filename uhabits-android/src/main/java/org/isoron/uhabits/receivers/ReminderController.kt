@@ -47,6 +47,21 @@ class ReminderController(
         date: LocalDate,
         reminderTime: Long
     ) {
+        val now = DateUtils.applyTimezone(DateUtils.getLocalTime())
+        val shieldUntil = preferences.experimentalFocusShieldUntil
+        if (shieldUntil > now) {
+            preferences.recordExperimentalFocusShieldDeferral(
+                reminderTime = reminderTime,
+                deferredUntil = shieldUntil
+            )
+            // Delay this reminder only. Do not mark the habit complete, dismiss
+            // it, or reschedule every other habit. Once the lease expires the
+            // normal reminder pipeline runs unchanged.
+            reminderScheduler.scheduleAtTime(habit, shieldUntil)
+            notificationTray.cancel(habit)
+            return
+        }
+
         notificationTray.show(habit, date, reminderTime)
         reminderScheduler.scheduleAll()
     }
