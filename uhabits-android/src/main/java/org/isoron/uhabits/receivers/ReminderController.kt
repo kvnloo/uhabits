@@ -54,10 +54,10 @@ class ReminderController(
                 reminderTime = reminderTime,
                 deferredUntil = shieldUntil
             )
-            // Delay this reminder only. Do not mark the habit complete, dismiss
-            // it, or reschedule every other habit. Once the lease expires the
-            // normal reminder pipeline runs unchanged.
-            reminderScheduler.scheduleAtTime(habit, shieldUntil)
+            // Delay this reminder only. Persist the deferral through Loop's
+            // existing snooze storage so app/phone restarts cannot silently
+            // restore the original alarm and lose the experiment condition.
+            reminderScheduler.snoozeUntil(habit, shieldUntil)
             notificationTray.cancel(habit)
             return
         }
