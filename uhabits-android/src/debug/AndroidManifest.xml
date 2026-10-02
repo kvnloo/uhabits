@@ -13,6 +13,7 @@
                 <action android:name="org.isoron.uhabits.EXPERIMENT_SET_FOCUS_SHIELD" />
                 <action android:name="org.isoron.uhabits.EXPERIMENT_CLEAR_FOCUS_SHIELD" />
                 <action android:name="org.isoron.uhabits.EXPERIMENT_REPORT_FOCUS_SHIELD" />
+                <action android:name="org.isoron.uhabits.EXPERIMENT_RESET_FOCUS_SHIELD_METRICS" />
             </intent-filter>
         </receiver>
     </application>
