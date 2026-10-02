@@ -47,25 +47,9 @@ class ReminderController(
         date: LocalDate,
         reminderTime: Long
     ) {
-        val now = DateUtils.applyTimezone(DateUtils.getLocalTime())
-        val shieldUntil = preferences.experimentalFocusShieldUntil
-        if (shieldUntil > now) {
-            preferences.recordExperimentalFocusShieldDeferral(
-                reminderTime = reminderTime,
-                deferredUntil = shieldUntil
-            )
-            // Delay this reminder only. Persist the deferral through Loop's
-            // existing snooze storage so app/phone restarts cannot silently
-            // restore the original alarm and lose the experiment condition.
-            reminderScheduler.snoozeUntil(habit, shieldUntil)
-            notificationTray.cancel(habit)
-            return
-        }
-
         notificationTray.show(habit, date, reminderTime)
         reminderScheduler.scheduleAll()
     }
-
     fun onSnoozePressed(habit: Habit, context: Context) {
         showSnoozeDelayPicker(habit, context)
     }
