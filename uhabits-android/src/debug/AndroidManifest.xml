@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!--
+          Debug-only experimental control surface. Release builds do not contain
+          this receiver. Exported solely so adb shell can set/clear a short focus
+          lease during controlled experiments.
+        -->
+        <receiver
+            android:name=".experiments.FlowShieldExperimentReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.isoron.uhabits.EXPERIMENT_SET_FOCUS_SHIELD" />
+                <action android:name="org.isoron.uhabits.EXPERIMENT_CLEAR_FOCUS_SHIELD" />
+                <action android:name="org.isoron.uhabits.EXPERIMENT_REPORT_FOCUS_SHIELD" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
