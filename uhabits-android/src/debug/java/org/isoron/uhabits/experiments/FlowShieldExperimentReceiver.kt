@@ -11,6 +11,7 @@ private const val TAG = "FlowShieldExperiment"
 const val ACTION_SET = "org.isoron.uhabits.EXPERIMENT_SET_FOCUS_SHIELD"
 const val ACTION_CLEAR = "org.isoron.uhabits.EXPERIMENT_CLEAR_FOCUS_SHIELD"
 const val ACTION_REPORT = "org.isoron.uhabits.EXPERIMENT_REPORT_FOCUS_SHIELD"
+const val ACTION_RESET_METRICS = "org.isoron.uhabits.EXPERIMENT_RESET_FOCUS_SHIELD_METRICS"
 const val EXTRA_MINUTES = "minutes"
 
 class FlowShieldExperimentReceiver : BroadcastReceiver() {
@@ -38,8 +39,14 @@ class FlowShieldExperimentReceiver : BroadcastReceiver() {
                     "focus_shield=report until=${preferences.experimentalFocusShieldUntil} " +
                         "deferrals=${preferences.experimentalFocusShieldDeferralCount} " +
                         "last_reminder=${preferences.experimentalFocusShieldLastReminderTime} " +
-                        "last_deferred_until=${preferences.experimentalFocusShieldLastDeferredUntil}"
+                        "last_deferred_until=${preferences.experimentalFocusShieldLastDeferredUntil} " +
+                        "pairs=${preferences.experimentalFocusShieldDeferralLog.joinToString(",")}"
                 )
+            }
+
+            ACTION_RESET_METRICS -> {
+                preferences.clearExperimentalFocusShieldMetrics()
+                Log.i(TAG, "focus_shield=metrics_reset")
             }
         }
     }
