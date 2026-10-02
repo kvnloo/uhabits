@@ -66,13 +66,18 @@ adb shell am broadcast \
   -a org.isoron.uhabits.EXPERIMENT_RESET_FOCUS_SHIELD_METRICS
 ```
 
-The report's `pairs` field is:
+The report's `records` field is a flat sequence of 4-value records:
 
 ```text
-originalReminderTime,deferredUntil,originalReminderTime,deferredUntil,...
+observedEpochMillis,reminderTime,deferredUntil,shieldedFlag,...
 ```
 
-with at most the newest 100 deferrals retained.
+- `observedEpochMillis`: real UTC epoch milliseconds; use this to join against ActivityWatch.
+- `reminderTime`: Loop's internal scheduled-reminder time.
+- `deferredUntil`: `0` for control reminders, otherwise the persisted shield expiry.
+- `shieldedFlag`: `0` for an eligible reminder shown normally, `1` for an eligible reminder deferred.
+
+Only reminders that pass Loop's normal completion/archive/day eligibility checks are recorded. Up to the newest 200 eligible reminder events are retained.
 
 ## Phase 1: intervention-only validation
 
@@ -85,7 +90,7 @@ Run shielded and unshielded work sessions while ActivityWatch records normal des
 - sustained-context time;
 - return-to-context latency.
 
-For a due Loop reminder, compare ActivityWatch behavior around the original reminder timestamp.
+For each eligible Loop reminder, compare ActivityWatch behavior around `observedEpochMillis`, which is recorded in both control and shield conditions.
 
 ### Suggested within-person design
 
