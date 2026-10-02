@@ -50,6 +50,7 @@ class ReminderController(
         notificationTray.show(habit, date, reminderTime)
         reminderScheduler.scheduleAll()
     }
+
     fun onSnoozePressed(habit: Habit, context: Context) {
         showSnoozeDelayPicker(habit, context)
     }
