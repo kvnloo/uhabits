@@ -148,6 +148,10 @@ open class NotificationTray(
                 systemTray.log(
                     "Habit ${habit.id} deferred by reminder intervention until $deferredUntil"
                 )
+                // A deferred reminder is not currently displayed. Leaving it in
+                // the active tray would let a later preference change call
+                // reshowAll() and bypass the persisted snooze.
+                active.remove(habit)
                 return
             }
 
