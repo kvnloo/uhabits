@@ -39,6 +39,10 @@ class NotificationTrayInterventionTest : BaseUnitTest() {
         assertEquals(0, systemTray.shown)
         assertEquals(listOf(456L to 999L), intervention.deferred)
         assertTrue(intervention.shown.isEmpty())
+
+        tray.reshow(habit)
+        assertEquals(1, intervention.deferCalls)
+        assertEquals(0, systemTray.shown)
     }
 
     @Test
@@ -50,6 +54,10 @@ class NotificationTrayInterventionTest : BaseUnitTest() {
         assertEquals(1, systemTray.shown)
         assertEquals(listOf(456L), intervention.shown)
         assertTrue(intervention.deferred.isEmpty())
+
+        tray.reshow(habit)
+        assertEquals(2, systemTray.shown)
+        assertEquals(listOf(456L), intervention.shown)
     }
 
     @Test
