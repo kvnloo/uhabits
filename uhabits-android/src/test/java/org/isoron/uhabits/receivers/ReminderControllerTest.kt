@@ -18,6 +18,7 @@
  */
 package org.isoron.uhabits.receivers
 
+import dev.mokkery.every
 import dev.mokkery.mock
 import dev.mokkery.verify
 import dev.mokkery.verifyNoMoreCalls
@@ -38,6 +39,7 @@ class ReminderControllerTest : BaseAndroidJVMTest() {
         reminderScheduler = mock()
         notificationTray = mock()
         preferences = mock()
+        every { preferences.experimentalFocusShieldUntil } returns 0L
         controller = ReminderController(
             reminderScheduler,
             notificationTray,
@@ -61,6 +63,28 @@ class ReminderControllerTest : BaseAndroidJVMTest() {
         controller.onShowReminder(habit, date, 456)
         verify { notificationTray.show(habit, date, 456) }
         verify { reminderScheduler.scheduleAll() }
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testOnShowReminderDefersDuringExperimentalFocusShield() {
+        val habit = fixtures.createEmptyHabit()
+        val date = LocalDate(2015, 1, 25)
+        val shieldUntil = Long.MAX_VALUE
+        every { preferences.experimentalFocusShieldUntil } returns shieldUntil
+
+        controller.onShowReminder(habit, date, 456)
+
+        verify {
+            preferences.recordExperimentalFocusShieldDeferral(
+                reminderTime = 456,
+                deferredUntil = shieldUntil
+            )
+        }
+        verify { reminderScheduler.scheduleAtTime(habit, shieldUntil) }
+        verify { notificationTray.cancel(habit) }
+        verifyNoMoreCalls(reminderScheduler)
+        verifyNoMoreCalls(notificationTray)
     }
 
     @Test
