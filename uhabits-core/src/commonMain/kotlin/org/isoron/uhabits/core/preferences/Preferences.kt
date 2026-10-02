@@ -141,6 +141,41 @@ open class Preferences(private val storage: Storage) {
             storage.putBoolean("pref_disable_animation", enabled)
         }
 
+    /**
+     * Downstream research-only lease used to test whether delaying nonurgent
+     * reminders protects focus. This is intentionally not a user-facing
+     * preference and should not be promoted upstream without experimental
+     * evidence.
+     *
+     * Timestamp uses the same local-time representation as reminder snoozes.
+     */
+    open var experimentalFocusShieldUntil: Long
+        get() = storage.getLong("experiment_focus_shield_until", 0L)
+        set(value) {
+            storage.putLong("experiment_focus_shield_until", value)
+        }
+
+    open val experimentalFocusShieldDeferralCount: Long
+        get() = storage.getLong("experiment_focus_shield_deferral_count", 0L)
+
+    open val experimentalFocusShieldLastReminderTime: Long
+        get() = storage.getLong("experiment_focus_shield_last_reminder_time", 0L)
+
+    open val experimentalFocusShieldLastDeferredUntil: Long
+        get() = storage.getLong("experiment_focus_shield_last_deferred_until", 0L)
+
+    open fun recordExperimentalFocusShieldDeferral(
+        reminderTime: Long,
+        deferredUntil: Long
+    ) {
+        storage.putLong(
+            "experiment_focus_shield_deferral_count",
+            experimentalFocusShieldDeferralCount + 1
+        )
+        storage.putLong("experiment_focus_shield_last_reminder_time", reminderTime)
+        storage.putLong("experiment_focus_shield_last_deferred_until", deferredUntil)
+    }
+
     open fun removeListener(listener: Listener) {
         listeners.remove(listener)
     }
