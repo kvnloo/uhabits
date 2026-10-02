@@ -155,38 +155,50 @@ open class Preferences(private val storage: Storage) {
             storage.putLong("experiment_focus_shield_until", value)
         }
 
+    open val experimentalFocusShieldReminderCount: Long
+        get() = storage.getLong("experiment_focus_shield_reminder_count", 0L)
+
     open val experimentalFocusShieldDeferralCount: Long
         get() = storage.getLong("experiment_focus_shield_deferral_count", 0L)
 
-    open val experimentalFocusShieldLastReminderTime: Long
-        get() = storage.getLong("experiment_focus_shield_last_reminder_time", 0L)
-
-    open val experimentalFocusShieldLastDeferredUntil: Long
-        get() = storage.getLong("experiment_focus_shield_last_deferred_until", 0L)
-
     /**
-     * Flat pairs: [originalReminderTime, deferredUntil, ...].
-     * No habit IDs/names are retained. Capped to the newest 100 deferrals.
+     * Flat records:
+     * [observedEpochMillis, reminderTime, deferredUntil, shieldedFlag, ...].
+     *
+     * observedEpochMillis is a real UTC epoch anchor for joining against
+     * ActivityWatch. reminderTime/deferredUntil retain Loop's internal reminder
+     * clock representation. No habit IDs/names are retained.
      */
-    open val experimentalFocusShieldDeferralLog: LongArray
-        get() = storage.getLongArray("experiment_focus_shield_deferral_log", longArrayOf())
+    open val experimentalFocusShieldEventLog: LongArray
+        get() = storage.getLongArray("experiment_focus_shield_event_log", longArrayOf())
 
-    open fun recordExperimentalFocusShieldDeferral(
+    open fun recordExperimentalFocusShieldReminderEvent(
+        observedEpochMillis: Long,
         reminderTime: Long,
-        deferredUntil: Long
+        deferredUntil: Long,
+        shielded: Boolean
     ) {
         storage.putLong(
-            "experiment_focus_shield_deferral_count",
-            experimentalFocusShieldDeferralCount + 1
+            "experiment_focus_shield_reminder_count",
+            experimentalFocusShieldReminderCount + 1
         )
-        storage.putLong("experiment_focus_shield_last_reminder_time", reminderTime)
-        storage.putLong("experiment_focus_shield_last_deferred_until", deferredUntil)
+        if (shielded) {
+            storage.putLong(
+                "experiment_focus_shield_deferral_count",
+                experimentalFocusShieldDeferralCount + 1
+            )
+        }
 
         val updated =
-            (experimentalFocusShieldDeferralLog + longArrayOf(reminderTime, deferredUntil))
-        val maxValues = 200 // 100 timestamp pairs
+            experimentalFocusShieldEventLog + longArrayOf(
+                observedEpochMillis,
+                reminderTime,
+                deferredUntil,
+                if (shielded) 1L else 0L
+            )
+        val maxValues = 800 // newest 200 reminder events
         storage.putLongArray(
-            "experiment_focus_shield_deferral_log",
+            "experiment_focus_shield_event_log",
             if (updated.size <= maxValues) updated else updated.copyOfRange(
                 updated.size - maxValues,
                 updated.size
@@ -195,10 +207,9 @@ open class Preferences(private val storage: Storage) {
     }
 
     open fun clearExperimentalFocusShieldMetrics() {
+        storage.putLong("experiment_focus_shield_reminder_count", 0L)
         storage.putLong("experiment_focus_shield_deferral_count", 0L)
-        storage.putLong("experiment_focus_shield_last_reminder_time", 0L)
-        storage.putLong("experiment_focus_shield_last_deferred_until", 0L)
-        storage.putLongArray("experiment_focus_shield_deferral_log", longArrayOf())
+        storage.putLongArray("experiment_focus_shield_event_log", longArrayOf())
     }
 
     open fun removeListener(listener: Listener) {
