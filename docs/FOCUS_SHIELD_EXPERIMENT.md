@@ -21,7 +21,10 @@ When the lease is active and a reminder becomes due:
 
 It does not store habit IDs, names, notes, or checkmark values in the experiment log.
 
-Release builds do not contain the debug broadcast receiver used to control the lease.
+Release builds do not contain the debug broadcast receiver used to control the lease,
+and the Android intervention checks `BuildConfig.DEBUG` before any deferral or
+experiment logging. An experimental lease retained through a debug-to-release
+upgrade must not change reminder delivery.
 
 ## Build
 
