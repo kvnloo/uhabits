@@ -148,22 +148,27 @@ open class NotificationTray(
                 systemTray.log(
                     "Habit ${habit.id} deferred by reminder intervention until $deferredUntil"
                 )
-                // A deferred reminder is not currently displayed. Leaving it in
-                // the active tray would let a later preference change call
-                // reshowAll() and bypass the persisted snooze.
-                active.remove(habit)
+                // Remove a previously displayed notification too: removing
+                // only the in-memory entry leaves the OS tray notification
+                // visible. Do not clear a newer reminder that superseded this
+                // asynchronous task.
+                if (active[habit]?.reminderTime == reminderTime) {
+                    systemTray.removeNotification(getNotificationId(habit))
+                    active.remove(habit)
+                }
                 return
             }
 
-            if (recordExperiment) {
-                reminderIntervention.onShown(reminderTime)
-            }
             systemTray.showNotification(
                 habit,
                 getNotificationId(habit),
                 date,
                 reminderTime
             )
+            // Record control only after successful tray dispatch.
+            if (recordExperiment) {
+                reminderIntervention.onShown(reminderTime)
+            }
         }
 
         private fun shouldShowReminderToday(): Boolean {
