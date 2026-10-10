@@ -104,6 +104,28 @@ Run enough ordinary sessions to collect at least several reminder events in each
 
 Avoid changing the habit, reminder text, notification sound, or task type between conditions.
 
+### Pre-register the comparison before collecting outcomes
+
+Assign **whole work sessions** to control/shield using a local random
+sequence prepared in advance (balanced within similar task/time-of-day
+blocks); do not choose the shield after noticing an especially good or bad
+focus session. Preserve the assigned condition even if the reminder never
+arrives, and separately count sessions without an eligible reminder. Do not
+infer a causal effect from hand-picked sessions or synthetic fixtures.
+
+Before the first eligible reminder, record the primary outcome
+`switched_within_2m` and the planned 10m/30m secondary windows. Run the
+existing ActivityWatch intervention analyzer unchanged across both arms.
+A **missing AFK/window boundary or insufficient post-window coverage is
+unknown, not a no-switch**; report censored/assessable counts by arm.
+Do not silently exclude inconvenient sessions or change thresholds after
+seeing outcomes.
+
+Keep a separate *manual*, content-free adherence tally (delivered,
+deferred, eventually acted on, missed); the existing four-field event log
+does **not** establish habit adherence. Stop the experiment if delayed
+reminders cause missed important obligations or unexpected UX harm.
+
 Primary comparison window:
 
 - 10 minutes before the original reminder;
