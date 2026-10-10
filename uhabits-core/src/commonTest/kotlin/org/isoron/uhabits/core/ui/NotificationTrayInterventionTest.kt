@@ -37,12 +37,29 @@ class NotificationTrayInterventionTest : BaseUnitTest() {
         tray.show(habit, LocalDate(2015, 1, 25), 456L)
 
         assertEquals(0, systemTray.shown)
+        assertEquals(1, systemTray.removed)
         assertEquals(listOf(456L to 999L), intervention.deferred)
         assertTrue(intervention.shown.isEmpty())
 
         tray.reshow(habit)
         assertEquals(1, intervention.deferCalls)
         assertEquals(0, systemTray.shown)
+    }
+
+    @Test
+    fun shieldingRemovesAnAlreadyDisplayedNotification() {
+        val habit = reminderHabit()
+
+        tray.show(habit, LocalDate(2015, 1, 25), 456L)
+        assertEquals(1, systemTray.shown)
+        assertEquals(0, systemTray.removed)
+
+        intervention.deferUntil = 999L
+        tray.show(habit, LocalDate(2015, 1, 25), 456L)
+
+        assertEquals(1, systemTray.shown)
+        assertEquals(1, systemTray.removed)
+        assertEquals(listOf(456L to 999L), intervention.deferred)
     }
 
     @Test
@@ -82,8 +99,11 @@ class NotificationTrayInterventionTest : BaseUnitTest() {
 
     private class RecordingSystemTray : NotificationTray.SystemTray {
         var shown = 0
+        var removed = 0
 
-        override fun removeNotification(notificationId: Int) {}
+        override fun removeNotification(notificationId: Int) {
+            removed += 1
+        }
 
         override fun showNotification(
             habit: Habit,
