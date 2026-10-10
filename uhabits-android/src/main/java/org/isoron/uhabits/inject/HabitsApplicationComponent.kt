@@ -49,6 +49,7 @@ import org.isoron.uhabits.intents.IntentScheduler
 import org.isoron.uhabits.intents.PendingIntentFactory
 import org.isoron.uhabits.io.AndroidLogging
 import org.isoron.uhabits.notifications.AndroidNotificationTray
+import org.isoron.uhabits.notifications.ExperimentalFocusShieldIntervention
 import org.isoron.uhabits.preferences.SharedPreferencesStorage
 import org.isoron.uhabits.receivers.ReminderController
 import org.isoron.uhabits.utils.DatabaseUtils
@@ -111,9 +112,16 @@ abstract class HabitsApplicationComponent(
         taskRunner: TaskRunner,
         commandRunner: CommandRunner,
         preferences: Preferences,
-        screen: AndroidNotificationTray
+        screen: AndroidNotificationTray,
+        reminderIntervention: ExperimentalFocusShieldIntervention
     ): NotificationTray =
-        NotificationTray(taskRunner, commandRunner, preferences, screen)
+        NotificationTray(
+            taskRunner,
+            commandRunner,
+            preferences,
+            screen,
+            reminderIntervention
+        )
 
     @AppScope
     @Provides

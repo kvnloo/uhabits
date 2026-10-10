@@ -122,6 +122,22 @@ class ReminderSchedulerTest : BaseUnitTest() {
     }
 
     @Test
+    fun testSnoozeUntilPersistsExactTime() {
+        val now = removeTimezone(unixTime(2015, 1, 1, 15, 0))
+        setFixedLocalTime(now)
+        val snoozedUntil = unixTime(2015, 1, 1, 21, 17)
+        val todayCheckmarkTime = unixTime(2015, 1, 1, 0, 0)
+        habit.reminder = Reminder(8, 30, WeekdayList.EVERY_DAY)
+
+        every { widgetPreferences.getSnoozeTime(habitId) } returns snoozedUntil
+
+        reminderScheduler.snoozeUntil(habit, snoozedUntil)
+
+        verify { widgetPreferences.setSnoozeTime(habitId, snoozedUntil) }
+        verify { sys.scheduleShowReminder(snoozedUntil, habit, todayCheckmarkTime) }
+    }
+
+    @Test
     fun testSchedule_laterToday() {
         val now = unixTime(2015, 1, 26, 6, 30)
         setFixedLocalTime(now)
